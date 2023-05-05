@@ -1,30 +1,31 @@
-name: Label PR on source and target branch
+name: Label PR by Branch
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, reopened, synchronize]
 
 jobs:
   label:
     runs-on: ubuntu-latest
     steps:
-      - name: Get source and target branch names
+      - name: Get branch names
         run: |
-          echo "Source branch name: ${{ github.event.pull_request.head.ref }}"
-          echo "Target branch name: ${{ github.event.pull_request.base.ref }}"
-        id: get_branches
+          source_branch=$(jq -r '.pull_request.head.ref' $GITHUB_EVENT_PATH)
+          target_branch=$(jq -r '.pull_request.base.ref' $GITHUB_EVENT_PATH)
+        id: get_branch_names
 
-      - name: Label pull request with source -> target branch name
-        uses: actions/github-script@v4
+      - name: Label PR with source branch name
+        uses: peter-evans/create-issue-from-file@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const source = context.payload.pull_request.head.ref;
-            const target = context.payload.pull_request.base.ref;
-            const labelText = `${source} -> ${target}`;
-            github.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.pull_request.number,
-              labels: [labelText]
-            });
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "source: ${{ steps.get_branch_names.outputs.source_branch }}"
+          labels: "source branch"
+          assignees: ${{ github.event.pull_request.user.login }}
+
+      - name: Label PR with target branch name
+        uses: peter-evans/create-issue-from-file@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "target: ${{ steps.get_branch_names.outputs.target_branch }}"
+          labels: "target branch"
+          assignees: ${{ github.event.pull_request.user.login }}
