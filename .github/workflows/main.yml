@@ -1,0 +1,30 @@
+name: Label PR on source and target branch
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get source and target branch names
+        run: |
+          echo "Source branch name: ${{ github.event.pull_request.head.ref }}"
+          echo "Target branch name: ${{ github.event.pull_request.base.ref }}"
+        id: get_branches
+
+      - name: Label pull request with source -> target branch name
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const source = context.payload.pull_request.head.ref;
+            const target = context.payload.pull_request.base.ref;
+            const labelText = `${source} -> ${target}`;
+            github.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: [labelText]
+            });
