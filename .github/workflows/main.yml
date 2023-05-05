@@ -1,31 +1,31 @@
-name: Label PR by Branch
+name: Label PR on source and target branch
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize]
+    types: [opened]
 
 jobs:
   label:
     runs-on: ubuntu-latest
     steps:
-      - name: Get branch names
+      - name: Get source and target branch names
         run: |
-          source_branch=$(jq -r '.pull_request.head.ref' $GITHUB_EVENT_PATH)
-          target_branch=$(jq -r '.pull_request.base.ref' $GITHUB_EVENT_PATH)
-        id: get_branch_names
+          echo "Source branch name: ${{ github.event.pull_request.head.ref }}"
+          echo "Target branch name: ${{ github.event.pull_request.base.ref }}"
+        id: get_branches
 
-      - name: Label PR with source branch name
-        uses: peter-evans/create-issue-from-file@v2
+      - name: Label pull request with source and target branch names
+        uses: actions/github-script@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: "source: ${{ steps.get_branch_names.outputs.source_branch }}"
-          labels: "source branch"
-          assignees: ${{ github.event.pull_request.user.login }}
-
-      - name: Label PR with target branch name
-        uses: peter-evans/create-issue-from-file@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: "target: ${{ steps.get_branch_names.outputs.target_branch }}"
-          labels: "target branch"
-          assignees: ${{ github.event.pull_request.user.login }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const source = context.payload.pull_request.head.ref;
+            const target = context.payload.pull_request.base.ref;
+            const sourceLabelText = `Source: ${source}`;
+            const targetLabelText = `Target: ${target}`;
+            github.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: [sourceLabelText, targetLabelText]
+            });
