@@ -43,7 +43,7 @@ jobs:
           script: |
             const prNumber = context.payload.pull_request.number;
             const existingDescription = context.payload.pull_request.body;
-            const newDescription = `- [ ] Task 1\n\n- [ ] Task 2\n\n- [ ] Task 3 `;
+            const newDescription = `- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3 `;
             const updatedDescription = existingDescription + '\n\n' + newDescription;
             github.pulls.update({
               owner: context.repo.owner,
