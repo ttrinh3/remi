@@ -1,4 +1,4 @@
-name: Label PR on source and target branch
+name: PR Processing
 
 on:
   pull_request:
@@ -51,3 +51,18 @@ jobs:
               pull_number: prNumber,
               body: updatedDescription
             });
+  auto_comment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: wow-actions/auto-comment@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          issuesOpened: |
+            👋 @{{ author }}
+            Thank you for raising an issue. We will will investigate into the matter and get back to you as soon as possible.
+            Please make sure you have given us as much context as possible.
+
+          pullRequestOpened: |
+            👋 @{{ author }}
+            Thank you for raising your pull request.
+            Please make sure you have followed our contributing guidelines. We will review it as soon as possible
