@@ -20,10 +20,6 @@ jobs:
       - name: Request Reviewers
         id: reviewers
         run: |
-          # Define branch patterns and reviewers using workflow inputs
-          # Each branch pattern is associated with a list of reviewers
-
-          # Example branch patterns and reviewers
           - name: main
             reviewers: ttrinh3
           - name: feature/*
