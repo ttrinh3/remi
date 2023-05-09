@@ -13,28 +13,31 @@ jobs:
 
       - name: Request Reviewers
         run: |
-          - branch_pattern: main
-            reviewers: ttrinh3
-          - branch_pattern: feature/*
-            reviewers: skatepoiser
+          # Define branch patterns and reviewers using workflow inputs
+          # Each branch pattern is associated with a list of reviewers
+
+          # Example branch patterns and reviewers
+          - name: main
+            reviewers:
+              - ttrinh3
+          - name: feature/*
+            reviewers:
+              - skatepoiser
 
           # Get the target branch of the pull request
           target_branch=$(jq --raw-output .pull_request.base.ref "$GITHUB_EVENT_PATH")
 
           # Loop through branch patterns and check if the target branch matches
-          if [[ -n $target_branch ]]; then
-            for reviewer_entry in "${reviewers[@]}"; do
-              branch_pattern=$(echo "$reviewer_entry" | jq -r '.branch_pattern')
-              if [[ $target_branch == $branch_pattern ]]; then
-                reviewers=$(echo "$reviewer_entry" | jq -r '.reviewers[]')
-                break
-              fi
-            done
-          fi
+          for branch_pattern in "${!reviewers[@]}"; do
+            if [[ $target_branch == $branch_pattern ]]; then
+              reviewers=("${reviewers[$branch_pattern].reviewers[@]}")
+              break
+            fi
+          done
 
           # Request reviewers
           if [[ -n $reviewers ]]; then
-            for reviewer in $reviewers; do
+            for reviewer in "${reviewers[@]}"; do
               echo "Requesting review from $reviewer"
               # Request review using the GitHub API
               curl -sSL -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
