@@ -33,17 +33,19 @@ jobs:
           target_branch=$(jq --raw-output .pull_request.base.ref "$GITHUB_EVENT_PATH")
 
           # Loop through branch patterns and check if the target branch matches
-          for reviewer_entry in ${{ toJSON(reviewers) }}; do
-            branch_pattern=$(echo $reviewer_entry | jq -r '.name')
-            if [[ $target_branch == $branch_pattern ]]; then
-              reviewers=$(echo $reviewer_entry | jq -r '.reviewers | join(",")')
-              break
-            fi
-          done
+          if [[ -n $target_branch ]]; then
+            for reviewer_entry in "${reviewers[@]}"; do
+              branch_pattern=$(echo "$reviewer_entry" | jq -r '.name')
+              if [[ $target_branch == $branch_pattern ]]; then
+                reviewers=$(echo "$reviewer_entry" | jq -r '.reviewers[]')
+                break
+              fi
+            done
+          fi
 
           # Request reviewers
           if [[ -n $reviewers ]]; then
-            for reviewer in $(echo $reviewers | tr ',' '\n'); do
+            for reviewer in $reviewers; do
               echo "Requesting review from $reviewer"
               # Request review using the GitHub API
               curl -sSL -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
