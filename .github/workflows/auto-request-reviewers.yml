@@ -1,0 +1,43 @@
+name: Request Reviewers
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Set up environment variables
+        run: echo "REPO_OWNER=${{ github.repository_owner }}" >> $GITHUB_ENV
+
+      - name: Run Reviewer Request Script
+        run: |
+          echo '[
+            { "branch_pattern": "main", "reviewers": ["ttrinh3"] },
+            { "branch_pattern": "feature/*", "reviewers": ["skatepoiser"] }
+          ]' > reviewers.json
+
+          target_branch=$(jq --raw-output .pull_request.base.ref "$GITHUB_EVENT_PATH")
+
+          for reviewer_entry in $(jq -c '.[]' reviewers.json); do
+            branch_pattern=$(echo "$reviewer_entry" | jq -r '.branch_pattern')
+            if [[ $target_branch == $branch_pattern ]]; then
+              reviewers=$(echo "$reviewer_entry" | jq -r '.reviewers[]')
+              break
+            fi
+          done
+
+          if [[ -n $reviewers ]]; then
+            for reviewer in $reviewers; do
+              echo "Requesting review from $reviewer"
+              curl -sSL -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers" \
+                -d "{\"reviewers\":[\"$reviewer\"]}"
+            done
+          fi
