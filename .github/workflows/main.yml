@@ -51,7 +51,8 @@ jobs:
             const prNumber = context.payload.pull_request.number;
             const existingDescription = context.payload.pull_request.body;
             const ticket = '${{ steps.extract_ticket.outputs.ticket }}'; // Access the extracted ticket from previous step
-            const newDescription = `\n\nJira Ticket: ${ticket}\n\n- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3 `;
+            const ticketLink = `https://cejira.sandisk.com/browse/${ticket.toUpperCase()}`;
+            const newDescription = `\n\nJira Ticket: [${ticket.toUpperCase()}](${ticketLink})\n\n- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3 `;
             const updatedDescription = existingDescription + newDescription;
             github.pulls.update({
               owner: context.repo.owner,
