@@ -13,25 +13,33 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
 
+      - name: Set up environment variables
+        id: env
+        run: |
+          echo "REPO_OWNER=${{ github.repository_owner }}" >> $GITHUB_ENV
+
       - name: Request Reviewers
+        id: reviewers
         run: |
           # Define branch patterns and reviewers using workflow inputs
           # Each branch pattern is associated with a list of reviewers
 
           # Example branch patterns and reviewers
-          branch_patterns_reviewers:
-            main:
+          - name: main
+            reviewers:
               - ttrinh3
-            feature/*:
+          - name: feature/*
+            reviewers:
               - skatepoiser
+
 
           # Get the target branch of the pull request
           target_branch=$(jq --raw-output .pull_request.base.ref "$GITHUB_EVENT_PATH")
 
           # Loop through branch patterns and check if the target branch matches
-          for branch_pattern in "${!branch_patterns_reviewers[@]}"; do
+          for branch_pattern in "${!reviewers[@]}"; do
             if [[ $target_branch == $branch_pattern ]]; then
-              reviewers=("${branch_patterns_reviewers[$branch_pattern]}")
+              reviewers=("${reviewers[$branch_pattern].reviewers[@]}")
               break
             fi
           done
