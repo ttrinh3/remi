@@ -1,5 +1,4 @@
-name: Automatic Reviewer Request
-
+name: Request Reviewers
 on:
   pull_request:
     types:
@@ -26,27 +25,25 @@ jobs:
 
           # Example branch patterns and reviewers
           - name: main
-            reviewers:
-              - ttrinh3
+            reviewers: ttrinh3
           - name: feature/*
-            reviewers:
-              - skatepoiser
-
+            reviewers: skatepoiser
 
           # Get the target branch of the pull request
           target_branch=$(jq --raw-output .pull_request.base.ref "$GITHUB_EVENT_PATH")
 
           # Loop through branch patterns and check if the target branch matches
-          for branch_pattern in "${!reviewers[@]}"; do
+          for reviewer_entry in ${{ toJSON(reviewers) }}; do
+            branch_pattern=$(echo $reviewer_entry | jq -r '.name')
             if [[ $target_branch == $branch_pattern ]]; then
-              reviewers=("${reviewers[$branch_pattern].reviewers[@]}")
+              reviewers=$(echo $reviewer_entry | jq -r '.reviewers | join(",")')
               break
             fi
           done
 
           # Request reviewers
           if [[ -n $reviewers ]]; then
-            for reviewer in "${reviewers[@]}"; do
+            for reviewer in $(echo $reviewers | tr ',' '\n'); do
               echo "Requesting review from $reviewer"
               # Request review using the GitHub API
               curl -sSL -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
