@@ -14,24 +14,26 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Request Reviewers
+        id: reviewers
         run: |
           # Define branch patterns and reviewers using workflow inputs
           # Each branch pattern is associated with a list of reviewers
 
           # Example branch patterns and reviewers
-          branch_patterns_reviewers:
-            main:
-              - ttrinh3
-            feature/*:
-              - skatepoiser
+          main:
+            - ttrinh3
+
+          feature/*:
+            - skatepoiser
+
 
           # Get the target branch of the pull request
           target_branch=$(jq --raw-output .pull_request.base.ref "$GITHUB_EVENT_PATH")
 
           # Loop through branch patterns and check if the target branch matches
-          for branch_pattern in "${!branch_patterns_reviewers[@]}"; do
+          for branch_pattern in "${!reviewers[@]}"; do
             if [[ $target_branch == $branch_pattern ]]; then
-              reviewers=("${branch_patterns_reviewers[$branch_pattern]}")
+              reviewers=("${reviewers[$branch_pattern]}")
               break
             fi
           done
