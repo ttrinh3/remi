@@ -7,22 +7,15 @@ on:
 jobs:
   review:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
 
-      - name: Set up environment variables
-        id: env
-        run: |
-          echo "REPO_OWNER=${{ github.repository_owner }}" >> $GITHUB_ENV
-
       - name: Request Reviewers
-        id: reviewers
         run: |
-          - name: main
+          - branch_pattern: main
             reviewers: ttrinh3
-          - name: feature/*
+          - branch_pattern: feature/*
             reviewers: skatepoiser
 
           # Get the target branch of the pull request
@@ -31,7 +24,7 @@ jobs:
           # Loop through branch patterns and check if the target branch matches
           if [[ -n $target_branch ]]; then
             for reviewer_entry in "${reviewers[@]}"; do
-              branch_pattern=$(echo "$reviewer_entry" | jq -r '.name')
+              branch_pattern=$(echo "$reviewer_entry" | jq -r '.branch_pattern')
               if [[ $target_branch == $branch_pattern ]]; then
                 reviewers=$(echo "$reviewer_entry" | jq -r '.reviewers[]')
                 break
