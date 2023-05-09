@@ -1,8 +1,8 @@
-name: Label PR on source and target branch
+name: PR Processing
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, synchronize]
 
 jobs:
   label:
@@ -28,4 +28,35 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
               labels: [sourceLabelText, targetLabelText]
+            });
+
+  add_markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Extract Jira ticket from PR title
+        id: extract_ticket
+        run: |
+          prTitle="${{ github.event.pull_request.title }}"
+          ticket=$(echo "$prTitle" | grep -oE '[A-Z]+-[0-9]+')
+          echo "::set-output name=ticket::$ticket"
+
+      - name: Add Markdown to PR Description
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const existingDescription = context.payload.pull_request.body;
+            const ticket = '${{ steps.extract_ticket.outputs.ticket }}'; // Access the extracted ticket from previous step
+            const ticketLink = `https://cejira.sandisk.com/browse/${ticket}`;
+            const newDescription = `\n\nJira Ticket: [${ticket}](${ticketLink})\n\n- [ ] Task 1\n- [ ] Task 2\n- [ ] Task 3 `;
+            const updatedDescription = existingDescription + newDescription;
+            github.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              body: updatedDescription
             });
