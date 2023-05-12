@@ -60,12 +60,4 @@ jobs:
               repo: context.repo.repo,
               pull_number: prNumber,
               body: updatedDescription
-            });
-            
-      - name: Autorequest Reviewers based on files changed
-        uses: necojackarc/auto-request-review@v0.10.0
-        with:
-          files: |
-           {
-             "**/*.js": ["skatepoiser"]
-           }  
+            });  
