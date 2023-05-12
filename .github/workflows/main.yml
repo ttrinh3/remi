@@ -5,7 +5,7 @@ on:
     types: [opened, synchronize, ready_for_review]
 
 jobs:
-  label:
+  label: #Automatically puts source and target labels on PR
     runs-on: ubuntu-latest
     steps:
       - name: Get source and target branch names
@@ -30,13 +30,14 @@ jobs:
               labels: [sourceLabelText, targetLabelText]
             });
 
-  add_markdown:
+  add_markdown: #populates PR description with content in newDescription variable
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Extract Jira ticket from PR title
+      
         id: extract_ticket
         run: |
           prTitle="${{ github.event.pull_request.title }}"
@@ -60,3 +61,11 @@ jobs:
               pull_number: prNumber,
               body: updatedDescription
             });
+            
+      - name: Autorequest Reviewers based on files changed
+        uses: necojackarc/auto-request-review@v0.10.0
+        with:
+          files: |
+           {
+             "**/*.js": ["skatepoiser"]
+           }  
