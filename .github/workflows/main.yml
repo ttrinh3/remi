@@ -5,6 +5,17 @@ on:
     types: [opened, synchronize, ready_for_review]
 
 jobs:
+  auto_request_review_code_based:
+    name: Request Review based on File Changed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request Review Based on File changed
+        uses: necojackarc/auto-request-review@v0.10.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config: .github/code-based-reviewers-cfg.yml #operate based on these configs
+          use_local: true
+          
   label: #Automatically puts source and target labels on PR
     runs-on: ubuntu-latest
     steps:
@@ -30,7 +41,7 @@ jobs:
               labels: [sourceLabelText, targetLabelText]
             });
 
-  add_markdown: #populates PR description with content in newDescription variable
+  add_pr_description: #populates PR description with content in newDescription variable
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
