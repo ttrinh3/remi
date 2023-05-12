@@ -14,7 +14,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           config: .github/code-based-reviewers-cfg.yml #operate based on these configs
-          use_local: true
           
   label: #Automatically puts source and target labels on PR
     runs-on: ubuntu-latest
